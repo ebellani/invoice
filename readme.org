@@ -1,0 +1,31 @@
+#+title: Invoice in multiple currencies
+
+* Why
+
+  The point of this project is to help you craft an invoice that
+  involves multiple currencies. It is initially geared towards
+  presenting the final result in bitcoins, but that is easy to change.
+
+* What
+
+  This is an orgmode file that uses python to generate more
+  data. Think of it as a python notebook thing.
+
+* Requirements
+
+  - Emacs 24
+  - Python 2
+  - [[https://pypi.python.org/pypi/openexchangerates][openexchangerates.org python API client]]
+
+* How
+
+  Just run
+
+  #+BEGIN_SRC shell-script
+    make sample.html
+  #+END_SRC
+
+  To generate an HTML invoice of the sample. Edit the initial table
+  with your and your client's information, and add your expenses and
+  their respective currencies in the table named ~input_table~. To see
+  the valid currency codes, see the [[https://pypi.python.org/pypi/openexchangerates][documentation]] for the API client.

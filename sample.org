@@ -1,0 +1,90 @@
+#+title: Invoice for  {{{time(%Y-%m-%d)}}}
+
+#+author: Eduardo Bellani
+#+options: toc:nil
+
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
+
+#+HTML_HEAD: <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+#+HTML_HEAD: <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
+
+* Entities involved
+
+  | Entity  | Name                 | Email     | Address |
+  |---------+----------------------+-----------+---------|
+  | Company | Eduardo Bellani - ME | xx@yy.com |         |
+  | Client  | LLC                  | yy@xx.com |         |
+  |         |                      |           |         |
+
+* Breakdown
+
+** Input
+
+   #+name: input_table
+   | Item        | Currency | Amount |
+   |-------------+----------+--------|
+   | Uber        | BRL      |   1000 |
+   | Programming | USD      |  10000 |
+
+   #+name: currency_init
+   #+BEGIN_SRC python :session :exports results
+     from openexchangerates import OpenExchangeRatesClient
+     import datetime
+     from decimal import *
+
+     client = OpenExchangeRatesClient("aac86480a3c44bc3bdead4f179db6be9")
+     oxr = client.latest()
+     BTC_rate = oxr['rates']['BTC']
+     getcontext().prec = 6
+   #+END_SRC
+
+
+
+** Aligned in BTC
+
+   #+name: activity_table
+   #+BEGIN_SRC python :session :var raw_table=input_table :exports results
+     amounts = []
+     return_table = [["Activity", "Value BTC"],
+                     None]
+
+     for (activity, currency, amount) in raw_table:
+         rate = oxr['rates'][currency]
+         dollar_amount = Decimal(amount) / rate
+         print(dollar_amount)
+         amount = float(dollar_amount*BTC_rate)
+         amounts.append(amount)
+         return_table.append([activity, float(dollar_amount*BTC_rate)])
+
+     return_table.append(None)
+     return_table.append(['Total', "{0:.6f}".format(sum(amounts))])
+     return_table
+   #+END_SRC
+
+** FX table
+
+   #+name: fx_tbl
+   #+BEGIN_SRC python :var raw_table=input_table :session :exports results
+     timestamp = datetime.\
+                 datetime.\
+                 fromtimestamp(oxr['timestamp'])\
+                     .strftime('%Y-%m-%d %H:%M:%S')
+
+     fx_table = [['Rate', 'Value'],
+                 None,
+                 ['USD -> BTC', float(BTC_rate)]]
+
+     currencies = [c for (d, c, v) in raw_table]
+     currencies = set(currencies)
+     for currency in list(currencies):
+         if currency != 'USD':
+             fx_table.append(['USD -> ' + currency, float(oxr['rates'][currency])])
+
+     fx_table.append(None)
+     fx_table.append(['Timestamp', timestamp])
+     fx_table
+   #+END_SRC
